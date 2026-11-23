@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>ContainerHealth | Dashboard</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <!-- ================= SIDEBAR ================= -->
+    <aside class="sidebar">
+
+        <div class="logo">
+
+            <div class="logo-icon">⬡</div>
+
+            <div>
+                <h2>Container<span>Health</span></h2>
+                <p>MONITORING SYSTEM</p>
+            </div>
+
+        </div>
+
+
+        <!-- NAVIGATION -->
+        <nav class="nav-section">
+
+            <p class="nav-title">MAIN MENU</p>
+
+
+            <a href="/" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
+                <span class="nav-icon">▦</span>
+                <span>Dashboard</span>
+            </a>
+
+
+            <a href="/containers" class="nav-item {% if active_page == 'containers' %}active{% endif %}">
+                <span class="nav-icon">⬡</span>
+                <span>Containers</span>
+            </a>
+
+
+            <a href="/monitoring" class="nav-item {% if active_page == 'monitoring' %}active{% endif %}">
+                <span class="nav-icon">◉</span>
+                <span>Monitoring</span>
+                <span class="coming">PHASE 2</span>
+            </a>
+
+
+            <a href="/health" class="nav-item {% if active_page == 'health' %}active{% endif %}">
+                <span class="nav-icon">♥</span>
+                <span>Health Analysis</span>
+                <span class="coming">PHASE 3</span>
+            </a>
+
+
+            <a href="/recovery" class="nav-item {% if active_page == 'recovery' %}active{% endif %}">
+                <span class="nav-icon">↻</span>
+                <span>Recovery</span>
+                <span class="coming">PHASE 4</span>
+            </a>
+
+        </nav>
+
+
+        <!-- SYSTEM STATUS -->
+        <div class="sidebar-bottom">
+
+            <div class="system-card">
+
+                <p>SYSTEM STATUS</p>
+
+                <div class="online-status">
+                    <span></span>
+                    Docker Connected
+                </div>
+
+            </div>
+
+        </div>
+
+    </aside>
+
+
+
+    <!-- ================= MAIN CONTENT ================= -->
+    <main class="main-content">
+
+
+        <!-- TOP HEADER -->
+        <div class="topbar">
+
+            <div>
+
+                <p class="breadcrumb">
+                    OVERVIEW / DASHBOARD
+                </p>
+
+                <h1>System Overview</h1>
+
+                <p class="description">
+                    Monitor and manage your Docker container environment.
+                </p>
+
+            </div>
+
+
+            <div class="live-status">
+
+                <span class="pulse"></span>
+
+                <div>
+                    <strong>LIVE SYSTEM</strong>
+                    <p>Docker Engine Connected</p>
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- ================= HERO ================= -->
+        <section class="hero">
+
+            <div class="hero-content">
+
+                <div class="hero-label">
+                    CONTAINERHEALTH PLATFORM
+                </div>
+
+
+                <h2>
+                    Intelligent Container
+                    <span>Health Monitoring</span>
+                </h2>
+
+
+                <p>
+                    A Docker-based monitoring and early-warning system designed
+                    to detect container risks before they become critical failures.
+                </p>
+
+
+                <div class="hero-tags">
+
+                    <span class="implemented">
+                        ✓ Docker Discovery
+                    </span>
+
+                    <span>
+                        ○ Resource Monitoring
+                    </span>
+
+                    <span>
+                        ○ Risk Detection
+                    </span>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- HERO GRAPHICS -->
+            <div class="hero-visual">
+
+                <div class="visual-box box-1">
+                    ⬡
+                </div>
+
+                <div class="visual-box box-2">
+                    ◉
+                </div>
+
+                <div class="visual-box box-3">
+                    ↻
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ================= STATISTICS ================= -->
+        <section class="stats-grid">
+
+
+            <!-- TOTAL CONTAINERS -->
+            <div class="stat-card primary">
+
+                <div class="stat-icon blue">
+                    ⬡
+                </div>
+
+                <div>
+
+                    <p>Total Containers</p>
+
+                    <h2>
+                        {{ containers|length }}
+                    </h2>
+
+                    <span class="stat-footer">
+                        Detected by Docker Engine
+                    </span>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- HEALTHY -->
+            <div class="stat-card">
+
+                <div class="stat-icon green">
+                    ✓
+                </div>
+
+                <div>
+
+                    <p>Healthy</p>
+
+                    <h2>—</h2>
+
+                    <span class="future">
+                        Available in Phase 3
+                    </span>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- WARNING -->
+            <div class="stat-card">
+
+                <div class="stat-icon yellow">
+                    !
+                </div>
+
+                <div>
+
+                    <p>Warning</p>
+
+                    <h2>—</h2>
+
+                    <span class="future">
+                        Risk analysis pending
+                    </span>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- CRITICAL -->
+            <div class="stat-card">
+
+                <div class="stat-icon red">
+                    !
+                </div>
+
+                <div>
+
+                    <p>Critical</p>
+
+                    <h2>—</h2>
+
+                    <span class="future">
+                        Recovery module pending
+                    </span>
+
+                </div>
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- ================= DETECTED CONTAINERS ================= -->
+        <section class="section-card">
+
+
+            <div class="section-header">
+
+                <div>
+
+                    <p class="section-label">
+                        DOCKER ENVIRONMENT
+                    </p>
+
+                    <h2>Detected Containers</h2>
+
+                    <p>
+                        Live information retrieved directly from Docker Engine.
+                    </p>
+
+                </div>
+
+
+                <a href="/containers" class="view-button">
+                    VIEW ALL →
+                </a>
+
+            </div>
+
+
+
+            <!-- IF CONTAINERS EXIST -->
+            {% if containers %}
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+                            <th>CONTAINER</th>
+                            <th>CONTAINER ID</th>
+                            <th>IMAGE</th>
+                            <th>STATUS</th>
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for container in containers[:5] %}
+
+                        <tr>
+
+
+                            <!-- NAME -->
+                            <td>
+
+                                <div class="container-info">
+
+                                    <div class="container-icon">
+                                        ⬡
+                                    </div>
+
+                                    <strong>
+                                        {{ container.name }}
+                                    </strong>
+
+                                </div>
+
+                            </td>
+
+
+
+                            <!-- ID -->
+                            <td>
+
+                                <code>
+                                    {{ container.id }}
+                                </code>
+
+                            </td>
+
+
+
+                            <!-- IMAGE -->
+                            <td>
+                                {{ container.image }}
+                            </td>
+
+
+
+                            <!-- STATUS -->
+                            <td>
+
+                                {% if container.status == "running" %}
+
+                                <span class="status-badge running">
+
+                                    <span></span>
+
+                                    Running
+
+                                </span>
+
+
+                                {% else %}
+
+                                <span class="status-badge stopped">
+
+                                    <span></span>
+
+                                    {{ container.status }}
+
+                                </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+
+            <!-- NO CONTAINERS -->
+            {% else %}
+
+            <div class="empty-container">
+
+                <div class="empty-icon">
+                    ⬡
+                </div>
+
+                <h3>No Containers Detected</h3>
+
+                <p>
+                    Docker Engine is connected, but there are currently
+                    no containers available to monitor.
+                </p>
+
+            </div>
+
+            {% endif %}
+
+        </section>
+
+
+
+        <!-- ================= PROJECT ROADMAP ================= -->
+        <section class="roadmap-section">
+
+
+            <div class="section-heading">
+
+                <div>
+
+                    <p class="section-label">
+                        PROJECT DEVELOPMENT
+                    </p>
+
+                    <h2>System Roadmap</h2>
+
+                </div>
+
+
+                <span class="progress-label">
+                    PHASE 1 OF 4
+                </span>
+
+            </div>
+
+
+
+            <div class="roadmap-grid">
+
+
+                <!-- PHASE 1 -->
+                <div class="roadmap-card completed">
+
+                    <div class="roadmap-number">
+                        ✓
+                    </div>
+
+                    <div>
+
+                        <span class="phase">
+                            PHASE 1 — IMPLEMENTED
+                        </span>
+
+                        <h3>Container Discovery</h3>
+
+                        <p>
+                            Connect to Docker Engine and discover containers.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- PHASE 2 -->
+                <div class="roadmap-card">
+
+                    <div class="roadmap-number">
+                        2
+                    </div>
+
+                    <div>
+
+                        <span class="phase">
+                            PHASE 2
+                        </span>
+
+                        <h3>Resource Monitoring</h3>
+
+                        <p>
+                            Monitor CPU, memory and container activity.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- PHASE 3 -->
+                <div class="roadmap-card">
+
+                    <div class="roadmap-number">
+                        3
+                    </div>
+
+                    <div>
+
+                        <span class="phase">
+                            PHASE 3
+                        </span>
+
+                        <h3>Health & Risk Analysis</h3>
+
+                        <p>
+                            Calculate health scores and detect risks.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- PHASE 4 -->
+                <div class="roadmap-card">
+
+                    <div class="roadmap-number">
+                        4
+                    </div>
+
+                    <div>
+
+                        <span class="phase">
+                            PHASE 4
+                        </span>
+
+                        <h3>Auto-Recovery</h3>
+
+                        <p>
+                            Perform controlled recovery for critical containers.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+
+        <!-- FOOTER -->
+        <footer>
+
+            <span>
+                ContainerHealth Monitoring Platform
+            </span>
+
+            <span>
+                CA1 • Phase 1 Implementation
+            </span>
+
+        </footer>
+
+
+    </main>
+
+</body>
+
+</html>

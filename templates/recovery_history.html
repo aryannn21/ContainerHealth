@@ -1,0 +1,344 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContainerHealth | Recovery History</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .history-section {
+            margin-top: 30px;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 22px;
+            flex-wrap: wrap;
+        }
+
+        .history-header h2 {
+            margin: 0;
+        }
+
+        .history-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .history-link {
+            display: inline-block;
+            padding: 10px 15px;
+            border-radius: 6px;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .history-link:hover {
+            background: #1d4ed8;
+        }
+
+        .history-count {
+            color: #999;
+            font-size: 13px;
+        }
+
+        .history-table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 12px;
+        }
+
+        .history-table {
+            width: 100%;
+            min-width: 950px;
+            border-collapse: collapse;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 16px 18px;
+            text-align: left;
+            border-bottom: 1px solid rgba(128, 128, 128, 0.15);
+            font-size: 13px;
+            vertical-align: top;
+        }
+
+        .history-table th {
+            color: #999;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+        }
+
+        .history-container {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .history-id {
+            color: #999;
+            font-size: 11px;
+        }
+
+        .history-message {
+            max-width: 300px;
+            overflow-wrap: anywhere;
+            color: #999;
+            line-height: 1.6;
+        }
+
+        .history-badge {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .result-success {
+            color: #22c55e;
+            background: rgba(34, 197, 94, 0.12);
+        }
+
+        .result-failed,
+        .result-error {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.12);
+        }
+
+        .result-other {
+            color: #eab308;
+            background: rgba(234, 179, 8, 0.12);
+        }
+
+        .history-empty {
+            text-align: center;
+            padding: 50px 20px;
+            color: #999;
+        }
+
+        .history-note {
+            margin-top: 18px;
+            color: #999;
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <aside class="sidebar">
+
+        <div class="logo">
+            <div class="logo-icon">⬡</div>
+            <div>
+                <h2>Container<span>Health</span></h2>
+                <p>MONITORING SYSTEM</p>
+            </div>
+        </div>
+
+        <nav class="nav-section">
+
+            <p class="nav-title">MAIN MENU</p>
+
+            <a href="/" class="nav-item">
+                <span class="nav-icon">▦</span>
+                <span>Dashboard</span>
+            </a>
+
+            <a href="/containers" class="nav-item">
+                <span class="nav-icon">⬡</span>
+                <span>Containers</span>
+            </a>
+
+            <a href="/monitoring" class="nav-item">
+                <span class="nav-icon">◉</span>
+                <span>Monitoring</span>
+                <span class="coming">PHASE 2</span>
+            </a>
+
+            <a href="/health" class="nav-item">
+                <span class="nav-icon">♥</span>
+                <span>Health Analysis</span>
+                <span class="coming">PHASE 3</span>
+            </a>
+
+            <a href="/recovery" class="nav-item active">
+                <span class="nav-icon">↻</span>
+                <span>Recovery</span>
+                <span class="coming">PHASE 4</span>
+            </a>
+
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="system-card">
+                <p>SYSTEM STATUS</p>
+                <div class="online-status">
+                    <span></span>
+                    Docker Connected
+                </div>
+            </div>
+        </div>
+
+    </aside>
+
+
+    <main class="main-content">
+
+        <div class="topbar">
+
+            <div>
+                <p class="breadcrumb">
+                    PROJECT DEVELOPMENT / PHASE 4
+                </p>
+
+                <h1>Recovery History</h1>
+
+                <p class="description">
+                    Review automatic and manual container recovery activity.
+                </p>
+            </div>
+
+            <a href="/recovery" class="back-button">
+                ← RECOVERY
+            </a>
+
+        </div>
+
+
+        <section class="history-section">
+
+            <div class="history-header">
+
+                <div>
+                    <h2>Recovery Logs</h2>
+                    <p class="description">
+                        Latest recorded recovery operations.
+                    </p>
+                </div>
+
+                <div class="history-actions">
+                    <span class="history-count">
+                        {{ logs|length }} record(s)
+                    </span>
+                    <a href="/recovery/history" class="history-link">
+                        ↻ Refresh
+                    </a>
+                </div>
+
+            </div>
+
+
+            <div class="history-table-wrapper">
+
+                <table class="history-table">
+
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Container</th>
+                            <th>Recovery Type</th>
+                            <th>Action</th>
+                            <th>Result</th>
+                            <th>Message</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for log in logs %}
+
+                        <tr>
+
+                            <td>{{ log.timestamp }}</td>
+
+                            <td>
+                                <div class="history-container">
+                                    {{ log.container_name }}
+                                </div>
+                                <div class="history-id">
+                                    ID: {{ log.container_id }}
+                                </div>
+                            </td>
+
+                            <td>{{ log.recovery_type }}</td>
+
+                            <td>{{ log.action }}</td>
+
+                            <td>
+                                {% set result = log.result|lower %}
+
+                                {% if result == "success" %}
+                                    <span class="history-badge result-success">
+                                        {{ log.result }}
+                                    </span>
+                                {% elif result in ["failed", "error"] %}
+                                    <span class="history-badge result-failed">
+                                        {{ log.result }}
+                                    </span>
+                                {% else %}
+                                    <span class="history-badge result-other">
+                                        {{ log.result }}
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <div class="history-message">
+                                    {{ log.message or "No additional message" }}
+                                </div>
+                            </td>
+
+                        </tr>
+
+                        {% else %}
+
+                        <tr>
+                            <td colspan="6">
+                                <div class="history-empty">
+                                    <h3>No recovery history yet</h3>
+                                    <p>
+                                        Recovery operations will appear here
+                                        when they are recorded.
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <p class="history-note">
+                Showing the latest 100 recovery records stored in the database.
+            </p>
+
+        </section>
+
+
+        <footer>
+            <span>ContainerHealth Monitoring Platform</span>
+            <span>PHASE 4 Development</span>
+        </footer>
+
+    </main>
+
+</body>
+</html>

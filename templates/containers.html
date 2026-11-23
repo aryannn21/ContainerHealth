@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>ContainerHealth | Containers</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <!-- ================= SIDEBAR ================= -->
+    <aside class="sidebar">
+
+        <div class="logo">
+            <div class="logo-icon">⬡</div>
+
+            <div>
+                <h2>Container<span>Health</span></h2>
+                <p>MONITORING SYSTEM</p>
+            </div>
+        </div>
+
+
+        <nav class="nav-section">
+
+            <p class="nav-title">MAIN MENU</p>
+
+            <a href="/" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
+                <span class="nav-icon">▦</span>
+                <span>Dashboard</span>
+            </a>
+
+            <a href="/containers" class="nav-item {% if active_page == 'containers' %}active{% endif %}">
+                <span class="nav-icon">⬡</span>
+                <span>Containers</span>
+            </a>
+
+            <a href="/monitoring" class="nav-item {% if active_page == 'monitoring' %}active{% endif %}">
+                <span class="nav-icon">◉</span>
+                <span>Monitoring</span>
+                <span class="coming">PHASE 2</span>
+            </a>
+
+            <a href="/health" class="nav-item {% if active_page == 'health' %}active{% endif %}">
+                <span class="nav-icon">♥</span>
+                <span>Health Analysis</span>
+                <span class="coming">PHASE 3</span>
+            </a>
+
+            <a href="/recovery" class="nav-item {% if active_page == 'recovery' %}active{% endif %}">
+                <span class="nav-icon">↻</span>
+                <span>Recovery</span>
+                <span class="coming">PHASE 4</span>
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <div class="system-card">
+                <p>SYSTEM STATUS</p>
+
+                <div class="online-status">
+                    <span></span>
+                    Docker Connected
+                </div>
+            </div>
+
+        </div>
+
+    </aside>
+
+
+    <!-- ================= MAIN CONTENT ================= -->
+    <main class="main-content">
+
+        <div class="topbar">
+
+            <div>
+                <p class="breadcrumb">DOCKER ENVIRONMENT / CONTAINERS</p>
+
+                <h1>Container Management</h1>
+
+                <p class="description">
+                    View and manage Docker containers currently detected by the system.
+                </p>
+            </div>
+
+
+            <div class="page-actions">
+
+                <button class="refresh-button" onclick="refreshContainers()">
+                    <span id="refreshIcon">↻</span>
+                    REFRESH DATA
+                </button>
+
+                <a href="/" class="back-button">
+                    ← DASHBOARD
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <!-- ================= CONTAINER SECTION ================= -->
+        <section class="section-card full-page-card">
+
+            <div class="section-header">
+
+                <div>
+                    <p class="section-label">LIVE DOCKER DATA</p>
+
+                    <h2>All Detected Containers</h2>
+
+                    <p>
+                        <span class="live-dot"></span>
+                        {{ containers|length }} container(s) currently detected.
+                    </p>
+                </div>
+
+                <div class="container-count">
+                    {{ containers|length }} TOTAL
+                </div>
+
+            </div>
+
+
+            {% if containers %}
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+                            <th>CONTAINER</th>
+                            <th>CONTAINER ID</th>
+                            <th>IMAGE</th>
+                            <th>STATUS</th>
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for container in containers %}
+
+                        <tr>
+
+                            <!-- CONTAINER NAME -->
+                            <td>
+
+                                <div class="container-info">
+
+                                    <div class="container-icon">
+                                        ⬡
+                                    </div>
+
+                                    <div>
+                                        <strong>
+                                            {{ container.name }}
+                                        </strong>
+
+                                        <span class="container-type">
+                                            Docker Container
+                                        </span>
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+
+                            <!-- CONTAINER ID -->
+                            <td>
+                                <code>{{ container.id }}</code>
+                            </td>
+
+
+                            <!-- IMAGE -->
+                            <td>
+
+                                <div class="image-info">
+                                    <span class="image-icon">◈</span>
+                                    {{ container.image }}
+                                </div>
+
+                            </td>
+
+
+                            <!-- STATUS -->
+                            <td>
+
+                                {% if container.status == "running" %}
+
+                                <span class="status-badge running">
+                                    <span></span>
+                                    Running
+                                </span>
+
+                                {% else %}
+
+                                <span class="status-badge stopped">
+                                    <span></span>
+                                    {{ container.status|capitalize }}
+                                </span>
+
+                                {% endif %}
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            {% else %}
+
+            <div class="empty-container">
+
+                <div class="empty-icon">⬡</div>
+
+                <h3>No Containers Found</h3>
+
+                <p>
+                    Docker Engine is connected, but no containers are currently available.
+                </p>
+
+                <button class="refresh-button empty-refresh" onclick="refreshContainers()">
+                    ↻ REFRESH DOCKER DATA
+                </button>
+
+            </div>
+
+            {% endif %}
+
+        </section>
+
+
+        <!-- ================= LIVE DATA INFO ================= -->
+        <section class="docker-info-grid">
+
+            <div class="info-card">
+
+                <div class="info-icon blue-info">⬡</div>
+
+                <div>
+                    <p>DISCOVERY STATUS</p>
+                    <h3>Active</h3>
+                    <span>Docker Engine connected</span>
+                </div>
+
+            </div>
+
+
+            <div class="info-card">
+
+                <div class="info-icon green-info">✓</div>
+
+                <div>
+                    <p>CONTAINERS DETECTED</p>
+                    <h3>{{ containers|length }}</h3>
+                    <span>Live Docker environment</span>
+                </div>
+
+            </div>
+
+
+            <div class="info-card">
+
+                <div class="info-icon orange-info">◉</div>
+
+                <div>
+                    <p>NEXT PHASE</p>
+                    <h3>Monitoring</h3>
+                    <span>CPU & Memory analysis</span>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <footer>
+            <span>ContainerHealth Monitoring Platform</span>
+
+            <span>
+                Phase 1 • Live Docker Container Discovery
+            </span>
+        </footer>
+
+    </main>
+
+
+    <!-- ================= JAVASCRIPT ================= -->
+    <script>
+
+        function refreshContainers() {
+
+            const icon = document.getElementById("refreshIcon");
+
+            if (icon) {
+                icon.style.display = "inline-block";
+                icon.style.animation = "spin 0.8s linear infinite";
+            }
+
+            setTimeout(function () {
+                window.location.reload();
+            }, 500);
+
+        }
+
+    </script>
+
+</body>
+
+</html>

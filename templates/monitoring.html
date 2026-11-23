@@ -1,0 +1,703 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContainerHealth | Monitoring</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        .monitor-stats {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .monitor-stat {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 25px;
+        }
+
+        .monitor-stat p {
+            color: var(--muted);
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+
+        .monitor-stat h2 {
+            font-size: 30px;
+            margin-bottom: 8px;
+        }
+
+        .monitor-stat span {
+            color: #64748b;
+            font-size: 11px;
+        }
+
+        .monitor-section-title {
+            margin: 32px 0 18px;
+        }
+
+        .monitor-section-title h2 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .monitor-section-title p {
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .monitor-table {
+            min-width: 1050px;
+        }
+
+        .monitor-table th,
+        .monitor-table td {
+            padding: 18px 16px;
+        }
+
+        .memory-track {
+            width: 100px;
+            height: 6px;
+            background: #263244;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .memory-fill {
+            height: 100%;
+            width: var(--progress-width, 0%);
+            background: var(--blue);
+            border-radius: 10px;
+        }
+
+        .memory-fill.warning {
+            background: var(--yellow);
+        }
+
+        .memory-fill.critical {
+            background: var(--red);
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .chart-card {
+            min-width: 0;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 25px;
+        }
+
+        .chart-card h3 {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .chart-area {
+            height: 270px;
+            position: relative;
+        }
+
+        .network-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .network-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 25px;
+        }
+
+        .network-card p {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .network-card h3 {
+            font-size: 27px;
+            margin: 12px 0 8px;
+        }
+
+        .empty-monitor {
+            text-align: center;
+            padding: 55px 20px;
+            color: var(--muted);
+        }
+
+        .empty-monitor h3 {
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+
+        .monitor-note {
+            color: #64748b;
+            font-size: 11px;
+            line-height: 1.7;
+            margin: 15px 0 25px;
+        }
+
+        .history-selector {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .history-selector form {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .history-selector label {
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .history-selector select {
+            padding: 11px 14px;
+            min-width: 240px;
+            background: var(--card);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        @media (max-width: 1000px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .monitor-stats,
+            .network-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-card {
+                padding: 16px;
+            }
+
+            .chart-area {
+                height: 230px;
+            }
+
+            .history-selector select {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<aside class="sidebar">
+    <div class="logo">
+        <div class="logo-icon">⬡</div>
+        <div>
+            <h2>Container<span>Health</span></h2>
+            <p>MONITORING SYSTEM</p>
+        </div>
+    </div>
+
+    <nav class="nav-section">
+        <p class="nav-title">MAIN MENU</p>
+
+        <a href="/" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
+            <span class="nav-icon">▦</span><span>Dashboard</span>
+        </a>
+
+        <a href="/containers" class="nav-item {% if active_page == 'containers' %}active{% endif %}">
+            <span class="nav-icon">⬡</span><span>Containers</span>
+        </a>
+
+        <a href="/monitoring" class="nav-item {% if active_page == 'monitoring' %}active{% endif %}">
+            <span class="nav-icon">◉</span><span>Monitoring</span><span class="coming">PHASE 2</span>
+        </a>
+
+        <a href="/health" class="nav-item {% if active_page == 'health' %}active{% endif %}">
+            <span class="nav-icon">♥</span><span>Health Analysis</span><span class="coming">PHASE 3</span>
+        </a>
+
+        <a href="/recovery" class="nav-item {% if active_page == 'recovery' %}active{% endif %}">
+            <span class="nav-icon">↻</span><span>Recovery</span><span class="coming">PHASE 4</span>
+        </a>
+    </nav>
+
+    <div class="sidebar-bottom">
+        <div class="system-card">
+            <p>SYSTEM STATUS</p>
+            <div class="online-status"><span></span>Docker Connected</div>
+        </div>
+    </div>
+</aside>
+
+
+<main class="main-content">
+
+    <div class="topbar">
+        <div>
+            <p class="breadcrumb">DOCKER ENVIRONMENT / MONITORING</p>
+            <h1>Resource Monitoring</h1>
+            <p class="description">
+                Monitor CPU, memory, network traffic and container uptime.
+            </p>
+        </div>
+
+        <div class="page-actions">
+            <a href="/monitoring{% if selected_container %}?container_id={{ selected_container.id }}{% endif %}"
+               class="back-button">
+                ↻ REFRESH DATA
+            </a>
+        </div>
+    </div>
+
+
+    {% set running = containers | selectattr('status', 'equalto', 'running') | list %}
+    {% set cpu_values = running | selectattr('cpu_percent', 'ne', none) | map(attribute='cpu_percent') | list %}
+    {% set memory_values = running | selectattr('memory_usage_mb', 'ne', none) | map(attribute='memory_usage_mb') | list %}
+    {% set rx_values = running | selectattr('network_rx_mb', 'ne', none) | map(attribute='network_rx_mb') | list %}
+    {% set tx_values = running | selectattr('network_tx_mb', 'ne', none) | map(attribute='network_tx_mb') | list %}
+
+
+    <section class="monitor-stats">
+
+        <div class="monitor-stat">
+            <p>Total Containers</p>
+            <h2>{{ containers | length }}</h2>
+            <span>Discovered by Docker Engine</span>
+        </div>
+
+        <div class="monitor-stat">
+            <p>Running Containers</p>
+            <h2>{{ running | length }}</h2>
+            <span>Currently running containers</span>
+        </div>
+
+        <div class="monitor-stat">
+            <p>Average CPU Usage</p>
+            <h2>
+                {% if cpu_values %}
+                    {{ "%.2f"|format(cpu_values | sum / cpu_values | length) }}%
+                {% else %}
+                    0.00%
+                {% endif %}
+            </h2>
+            <span>Average across running containers</span>
+        </div>
+
+        <div class="monitor-stat">
+            <p>Total Memory Usage</p>
+            <h2>
+                {% if memory_values %}
+                    {{ "%.2f"|format(memory_values | sum) }} MB
+                {% else %}
+                    0.00 MB
+                {% endif %}
+            </h2>
+            <span>Combined memory usage reported by Docker</span>
+        </div>
+
+    </section>
+
+
+    <div class="monitor-section-title">
+        <h2>Container Resource Details</h2>
+        <p>
+            Current CPU, memory, network, uptime and restart information for each container.
+        </p>
+    </div>
+
+
+    <section class="section-card">
+
+        {% if containers %}
+
+        <div class="table-wrapper">
+            <table class="monitor-table">
+
+                <thead>
+                    <tr>
+                        <th>CONTAINER</th>
+                        <th>STATUS</th>
+                        <th>CPU</th>
+                        <th>MEMORY</th>
+                        <th>MEMORY USAGE</th>
+                        <th>NETWORK RX</th>
+                        <th>NETWORK TX</th>
+                        <th>UPTIME</th>
+                        <th>RESTARTS</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for container in containers %}
+
+                    <tr>
+                        <td>
+                            <div class="container-info">
+                                <div class="container-icon">⬡</div>
+                                <div>
+                                    <strong>{{ container.name }}</strong>
+                                    <span class="container-type">{{ container.image }}</span>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            {% if container.status == 'running' %}
+                                <span class="status-badge running"><span></span>Running</span>
+                            {% else %}
+                                <span class="status-badge stopped"><span></span>{{ container.status | capitalize }}</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if container.cpu_percent is not none %}
+                                {{ "%.2f"|format(container.cpu_percent) }}%
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if container.memory_usage_mb is not none %}
+                                {{ "%.2f"|format(container.memory_usage_mb) }} MB
+                            {% else %}
+                                N/A
+                            {% endif %}
+
+                            {% if container.memory_limit_mb is not none %}
+                                <span class="container-type">
+                                    Limit: {{ "%.0f"|format(container.memory_limit_mb) }} MB
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if container.memory_percent is not none %}
+                                {{ "%.1f"|format(container.memory_percent) }}%
+
+                                {% set memory_width = [[container.memory_percent, 0] | max, 100] | min %}
+
+                                <div class="memory-track">
+                                    <div class="memory-fill
+                                        {% if container.memory_percent >= 90 %}critical
+                                        {% elif container.memory_percent >= 75 %}warning
+                                        {% endif %}"
+                                        style="--progress-width: {{ memory_width }}%;">
+                                    </div>
+                                </div>
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if container.network_rx_mb is not none %}
+                                {{ "%.3f"|format(container.network_rx_mb) }} MB
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if container.network_tx_mb is not none %}
+                                {{ "%.3f"|format(container.network_tx_mb) }} MB
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+
+                        <td>{{ container.uptime }}</td>
+                        <td>{{ container.restart_count }}</td>
+                    </tr>
+
+                    {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+
+        {% else %}
+
+        <div class="empty-monitor">
+            <h3>No Containers Found</h3>
+            <p>Start a Docker container and refresh this page to view its metrics.</p>
+        </div>
+
+        {% endif %}
+
+    </section>
+
+
+    <div class="monitor-section-title">
+        <h2>Network Summary</h2>
+        <p>Total cumulative network traffic reported for running containers.</p>
+    </div>
+
+
+    <section class="network-grid">
+
+        <div class="network-card">
+            <p>Total Data Received</p>
+            <h3>
+                {% if rx_values %}
+                    {{ "%.3f"|format(rx_values | sum) }} MB
+                {% else %}
+                    0.000 MB
+                {% endif %}
+            </h3>
+            <p>Combined received traffic</p>
+        </div>
+
+        <div class="network-card">
+            <p>Total Data Sent</p>
+            <h3>
+                {% if tx_values %}
+                    {{ "%.3f"|format(tx_values | sum) }} MB
+                {% else %}
+                    0.000 MB
+                {% endif %}
+            </h3>
+            <p>Combined transmitted traffic</p>
+        </div>
+
+    </section>
+
+
+    <div class="monitor-section-title">
+        <h2>Resource Usage History</h2>
+        <p>Historical CPU and memory readings for the selected container.</p>
+    </div>
+
+
+    <section class="history-selector">
+
+        {% if containers %}
+
+        <form method="GET" action="/monitoring">
+
+            <label for="container_id">Select Container:</label>
+
+            <select
+                name="container_id"
+                id="container_id"
+                onchange="this.form.submit()"
+            >
+
+                {% for container in containers %}
+
+                <option
+                    value="{{ container.id }}"
+                    {% if selected_container and container.id == selected_container.id %}
+                        selected
+                    {% endif %}
+                >
+                    {{ container.name }}
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+        </form>
+
+        {% else %}
+
+        <p>No containers available for historical monitoring.</p>
+
+        {% endif %}
+
+    </section>
+
+
+    <section class="chart-grid">
+
+        {% if history %}
+
+        <div class="chart-card">
+            <h3>CPU Usage — {{ selected_container.name }}</h3>
+            <div class="chart-area">
+                <canvas id="cpuChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <h3>Memory Usage — {{ selected_container.name }}</h3>
+            <div class="chart-area">
+                <canvas id="memoryChart"></canvas>
+            </div>
+        </div>
+
+        {% else %}
+
+        <div class="section-card" style="grid-column: 1 / -1;">
+            <div class="empty-monitor">
+                <h3>No Historical Readings Yet</h3>
+                <p>
+                    Keep the application running to collect snapshots,
+                    then refresh this page.
+                </p>
+            </div>
+        </div>
+
+        {% endif %}
+
+    </section>
+
+
+    {% if history %}
+
+    <p class="monitor-note">
+        Showing {{ history | length }} saved readings for
+        {{ selected_container.name }}. Collection runs in the background
+        while the application is running. The charts update when this page is refreshed.
+    </p>
+
+    <script type="application/json" id="history-data">{{ history | tojson }}</script>
+
+    <script>
+        const historyData = JSON.parse(
+            document.getElementById("history-data").textContent
+        );
+
+        const labels = historyData.map(item => {
+            const date = new Date(item.timestamp);
+
+            return date.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit"
+            });
+        });
+
+        const chartText = "#94a3b8";
+        const chartGrid = "rgba(148, 163, 184, 0.12)";
+
+        const commonOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            interaction: {
+                intersect: false,
+                mode: "index"
+            },
+
+            plugins: {
+                legend: {
+                    labels: {
+                        color: chartText
+                    }
+                }
+            },
+
+            scales: {
+                x: {
+                    ticks: {
+                        color: chartText,
+                        maxTicksLimit: 6,
+                        maxRotation: 0
+                    },
+                    grid: {
+                        color: chartGrid
+                    }
+                },
+
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: chartText
+                    },
+                    grid: {
+                        color: chartGrid
+                    }
+                }
+            }
+        };
+
+
+        new Chart(document.getElementById("cpuChart"), {
+            type: "line",
+
+            data: {
+                labels,
+
+                datasets: [{
+                    label: "CPU Usage (%)",
+                    data: historyData.map(item => item.cpu_percent),
+                    borderColor: "#38bdf8",
+                    backgroundColor: "rgba(56, 189, 248, 0.12)",
+                    borderWidth: 2,
+                    pointRadius: 2,
+                    tension: 0.3,
+                    fill: true,
+                    spanGaps: false
+                }]
+            },
+
+            options: commonOptions
+        });
+
+
+        new Chart(document.getElementById("memoryChart"), {
+            type: "line",
+
+            data: {
+                labels,
+
+                datasets: [{
+                    label: "Memory Usage (MB)",
+                    data: historyData.map(item => item.memory_usage_mb),
+                    borderColor: "#4ade80",
+                    backgroundColor: "rgba(74, 222, 128, 0.12)",
+                    borderWidth: 2,
+                    pointRadius: 2,
+                    tension: 0.3,
+                    fill: true,
+                    spanGaps: false
+                }]
+            },
+
+            options: commonOptions
+        });
+
+    </script>
+
+    {% endif %}
+
+
+    <footer>
+        <span>ContainerHealth Monitoring Platform</span>
+        <span>Phase 2 • Resource Monitoring</span>
+    </footer>
+
+</main>
+
+</body>
+</html>

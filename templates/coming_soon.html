@@ -1,0 +1,699 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContainerHealth | {{ module }}</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .recovery-section {
+            margin-top: 30px;
+        }
+
+        .recovery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 22px;
+        }
+
+        .recovery-header h2 {
+            margin: 0;
+        }
+
+        .recovery-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .recovery-count {
+            color: #8b8b8b;
+            font-size: 13px;
+        }
+
+        .history-button {
+            display: inline-block;
+            padding: 10px 15px;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+
+        .history-button:hover {
+            background: #1d4ed8;
+        }
+
+        .recovery-alert {
+            padding: 14px 18px;
+            border-radius: 8px;
+            margin-bottom: 18px;
+            font-size: 14px;
+        }
+
+        .recovery-alert.success {
+            background: rgba(34, 197, 94, 0.12);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .recovery-alert.error {
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .recovery-table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 12px;
+        }
+
+        .recovery-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 850px;
+        }
+
+        .recovery-table th,
+        .recovery-table td {
+            padding: 17px 18px;
+            text-align: left;
+            border-bottom: 1px solid rgba(128, 128, 128, 0.15);
+            font-size: 13px;
+        }
+
+        .recovery-table th {
+            color: #999;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+        }
+
+        .container-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .container-id {
+            font-size: 11px;
+            color: #999;
+        }
+
+        .container-image {
+            max-width: 190px;
+            overflow-wrap: anywhere;
+            color: #999;
+        }
+
+        .status-pill {
+            display: inline-block;
+            padding: 6px 11px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-running {
+            color: #22c55e;
+            background: rgba(34, 197, 94, 0.12);
+        }
+
+        .status-stopped {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.12);
+        }
+
+        .status-other {
+            color: #eab308;
+            background: rgba(234, 179, 8, 0.12);
+        }
+
+        .restart-button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 9px 15px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .restart-button:hover {
+            background: #1d4ed8;
+        }
+
+        .auto-button {
+            border: none;
+            border-radius: 6px;
+            padding: 9px 13px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .enable-button {
+            background: #16a34a;
+            color: white;
+        }
+
+        .enable-button:hover {
+            background: #15803d;
+        }
+
+        .disable-button {
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .disable-button:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .auto-enabled {
+            color: #22c55e;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .auto-disabled {
+            color: #999;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .running-label {
+            color: #22c55e;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .unavailable-label {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .empty-recovery {
+            text-align: center;
+            padding: 45px 20px;
+            color: #999;
+        }
+
+        .recovery-note {
+            margin-top: 20px;
+            padding: 15px 18px;
+            border-radius: 8px;
+            background: rgba(128, 128, 128, 0.07);
+            color: #999;
+            font-size: 12px;
+            line-height: 1.8;
+        }
+
+        .policy-heading {
+            font-weight: 600;
+            color: inherit;
+            margin-bottom: 5px;
+        }
+
+        /* Docker connection indicator */
+
+        .online-status.disconnected {
+            color: #ef4444;
+        }
+
+        .online-status.disconnected span {
+            background: #ef4444;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+        }
+
+        .online-status.connected span {
+            background: #22c55e;
+        }
+
+        @media (max-width: 700px) {
+            .recovery-header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .recovery-header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <aside class="sidebar">
+
+        <div class="logo">
+            <div class="logo-icon">⬡</div>
+            <div>
+                <h2>Container<span>Health</span></h2>
+                <p>MONITORING SYSTEM</p>
+            </div>
+        </div>
+
+        <nav class="nav-section">
+
+            <p class="nav-title">MAIN MENU</p>
+
+            <a href="/" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
+                <span class="nav-icon">▦</span>
+                <span>Dashboard</span>
+            </a>
+
+            <a href="/containers" class="nav-item {% if active_page == 'containers' %}active{% endif %}">
+                <span class="nav-icon">⬡</span>
+                <span>Containers</span>
+            </a>
+
+            <a href="/monitoring" class="nav-item {% if active_page == 'monitoring' %}active{% endif %}">
+                <span class="nav-icon">◉</span>
+                <span>Monitoring</span>
+                <span class="coming">PHASE 2</span>
+            </a>
+
+            <a href="/health" class="nav-item {% if active_page == 'health' %}active{% endif %}">
+                <span class="nav-icon">♥</span>
+                <span>Health Analysis</span>
+                <span class="coming">PHASE 3</span>
+            </a>
+
+            <a href="/recovery" class="nav-item {% if active_page == 'recovery' %}active{% endif %}">
+                <span class="nav-icon">↻</span>
+                <span>Recovery</span>
+                <span class="coming">PHASE 4</span>
+            </a>
+
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="system-card">
+                <p>SYSTEM STATUS</p>
+
+                <div id="docker-status"
+     class="online-status {% if docker_connected %}connected{% else %}disconnected{% endif %}">
+    <span class="status-indicator"></span>
+    <span id="docker-status-text">
+        {% if docker_connected %}
+            Docker Connected
+        {% else %}
+            Docker Disconnected
+        {% endif %}
+    </span>
+</div>
+            </div>
+        </div>
+
+    </aside>
+
+
+    <main class="main-content">
+
+        <div class="topbar">
+
+            <div>
+                <p class="breadcrumb">
+                    PROJECT DEVELOPMENT / {{ phase }}
+                </p>
+
+                <h1>{{ module }}</h1>
+
+                <p class="description">
+                    Monitor, configure and recover Docker containers.
+                </p>
+            </div>
+
+            <a href="/" class="back-button">
+                ← DASHBOARD
+            </a>
+
+        </div>
+
+
+        {% if active_page == "recovery" %}
+
+        <section class="recovery-section">
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="recovery-alert {{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+
+            <div class="recovery-header">
+
+                <div>
+                    <h2>Container Recovery</h2>
+                    <p class="description">
+                        Manage manual and automatic container recovery.
+                    </p>
+                </div>
+
+                <div class="recovery-header-actions">
+
+                    <span class="recovery-count">
+                        {{ containers|length }} container(s) detected
+                    </span>
+
+                    <a href="{{ url_for('recovery_history') }}"
+                       class="history-button">
+                        View Recovery History →
+                    </a>
+
+                </div>
+
+            </div>
+
+
+            <div class="recovery-table-wrapper">
+
+                <table class="recovery-table">
+
+                    <thead>
+                        <tr>
+                            <th>Container</th>
+                            <th>Image</th>
+                            <th>Status</th>
+                            <th>Automatic Recovery</th>
+                            <th>Manual Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for container in containers %}
+
+                        {% set config = recovery_configs.get(container.id) %}
+                        {% set auto_enabled = config and config.enabled %}
+
+                        <tr>
+
+                            <td>
+                                <div class="container-name">
+                                    {{ container.name }}
+                                </div>
+
+                                <div class="container-id">
+                                    ID: {{ container.id }}
+                                </div>
+                            </td>
+
+                            <td>
+                                <div class="container-image">
+                                    {{ container.image }}
+                                </div>
+                            </td>
+
+                            <td>
+
+                                {% if container.status|lower == "running" %}
+
+                                    <span class="status-pill status-running">
+                                        Running
+                                    </span>
+
+                                {% elif container.status|lower in ["exited", "created", "dead"] %}
+
+                                    <span class="status-pill status-stopped">
+                                        {{ container.status }}
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="status-pill status-other">
+                                        {{ container.status }}
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <td>
+
+                                {% if auto_enabled %}
+
+                                    <div class="auto-enabled">
+                                        ● Enabled
+                                    </div>
+
+                                    <form method="POST"
+                                          action="{{ url_for('configure_auto_recovery', container_id=container.id) }}"
+                                          onsubmit="return confirm('Disable automatic recovery for {{ container.name }}?');">
+
+                                        <input type="hidden"
+                                               name="enabled"
+                                               value="false">
+
+                                        <button type="submit"
+                                                class="auto-button disable-button">
+                                            Disable
+                                        </button>
+
+                                    </form>
+
+                                    <div class="container-id">
+                                        Max attempts: {{ config.max_attempts }}<br>
+                                        Cooldown: {{ config.cooldown_seconds }} seconds
+                                    </div>
+
+                                {% else %}
+
+                                    <div class="auto-disabled">
+                                        ○ Disabled
+                                    </div>
+
+                                    <form method="POST"
+                                          action="{{ url_for('configure_auto_recovery', container_id=container.id) }}"
+                                          onsubmit="return confirm('Enable automatic recovery for {{ container.name }}?');">
+
+                                        <input type="hidden"
+                                               name="enabled"
+                                               value="true">
+
+                                        <button type="submit"
+                                                class="auto-button enable-button">
+                                            Enable
+                                        </button>
+
+                                    </form>
+
+                                    <div class="container-id">
+                                        Max attempts: 3<br>
+                                        Cooldown: 60 seconds
+                                    </div>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <td>
+
+                                {% if container.status|lower in ["exited", "created", "dead"] %}
+
+                                    <form method="POST"
+                                          action="{{ url_for('recovery_restart', container_id=container.id) }}"
+                                          onsubmit="return confirm('Are you sure you want to restart {{ container.name }}?');">
+
+                                        <button type="submit"
+                                                class="restart-button">
+                                            ↻ Restart
+                                        </button>
+
+                                    </form>
+
+                                {% elif container.status|lower == "running" %}
+
+                                    <span class="running-label">
+                                        ● Operational
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="unavailable-label">
+                                        Not eligible
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                        </tr>
+
+                        {% else %}
+
+                        <tr>
+                            <td colspan="5">
+                                <div class="empty-recovery">
+                                    <h3>No containers found</h3>
+                                    <p>
+                                        Make sure Docker Desktop is running
+                                        and containers are available.
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <div class="recovery-note">
+
+                <div class="policy-heading">
+                    Automatic Recovery Policy
+                </div>
+
+                • Automatic recovery is disabled by default.<br>
+                • Only explicitly enrolled containers are considered.<br>
+                • Maximum recovery attempts: 3.<br>
+                • Cooldown between attempts: 60 seconds.<br>
+                • Containers with normal exit code 0 are ignored by the current recovery engine.<br>
+                • Enabling recovery means the system may restart an enrolled container after an abnormal exit, including an intentional stop that produces a non-zero exit code.<br>
+                • CPU and memory warnings do not independently trigger restarts.
+
+            </div>
+
+        </section>
+
+
+        {% else %}
+
+        <section class="development-page">
+
+            <div class="development-icon">
+
+                {% if active_page == "monitoring" %}
+                    ◉
+                {% elif active_page == "health" %}
+                    ♥
+                {% else %}
+                    ↻
+                {% endif %}
+
+            </div>
+
+            <div class="phase-badge">
+                {{ phase }}
+            </div>
+
+            <h2>Module Under Development</h2>
+
+            <p>{{ description }}</p>
+
+            <div class="development-line"></div>
+
+            <div class="development-info">
+
+                <div>
+                    <span>PROJECT STATUS</span>
+                    <strong>Planned</strong>
+                </div>
+
+                <div>
+                    <span>IMPLEMENTATION</span>
+                    <strong>{{ phase }}</strong>
+                </div>
+
+                <div>
+                    <span>ARCHITECTURE</span>
+                    <strong>Designed</strong>
+                </div>
+
+            </div>
+
+            <p class="honest-note">
+                This feature is part of the complete ContainerHealth
+                architecture and will be implemented in the corresponding
+                development phase.
+            </p>
+
+        </section>
+
+        {% endif %}
+
+
+        <footer>
+            <span>ContainerHealth Monitoring Platform</span>
+            <span>{{ phase }} Development</span>
+        </footer>
+
+    </main>
+
+
+    <script>
+        async function updateDockerStatus() {
+            const statusElement = document.getElementById("docker-status");
+            const textElement = document.getElementById("docker-status-text");
+
+            if (!statusElement || !textElement) {
+                return;
+            }
+
+            try {
+                const response = await fetch("/api/docker-status", {
+                    cache: "no-store"
+                });
+
+                if (!response.ok) {
+                    throw new Error("Status request failed");
+                }
+
+                const data = await response.json();
+
+                if (data.connected) {
+                    statusElement.classList.remove("disconnected");
+                    statusElement.classList.add("connected");
+                    textElement.textContent = "Docker Connected";
+                } else {
+                    statusElement.classList.remove("connected");
+                    statusElement.classList.add("disconnected");
+                    textElement.textContent = "Docker Disconnected";
+                }
+
+            } catch (error) {
+                statusElement.classList.remove("connected");
+                statusElement.classList.add("disconnected");
+                textElement.textContent = "Docker Disconnected";
+            }
+        }
+
+        updateDockerStatus();
+        setInterval(updateDockerStatus, 5000);
+    </script>
+
+</body>
+</html>
